@@ -158,6 +158,7 @@ struct PhysicalEntity
 
 	Vector2 velocity = {};
 	Vector2 acceleration = {};
+	float drag = 0.01f;
 
 	void teleport(Vector2 pos)
 	{
@@ -165,9 +166,9 @@ struct PhysicalEntity
 		lastPosition = pos;
 	}
 
-	void applyGravity()
+	void applyGravity(float g)
 	{
-		acceleration += {0, 200.0f};
+		acceleration += {0, g};
 	}
 
 	void updateForces(float deltaTime)
@@ -181,7 +182,6 @@ struct PhysicalEntity
 		// always pushes back toward zero.
 		Vector2 dragVector = Vector2{ velocity.x * std::abs(velocity.x),
 									  velocity.y * std::abs(velocity.y) };
-		float drag = 0.00f;
 
 		// Amount of velocity drag would remove this frame = dragVector * drag * deltaTime.
 		// If that's larger than the velocity we have left, subtracting it would
@@ -196,7 +196,7 @@ struct PhysicalEntity
 		if (Vector2Length(velocity) < 0.01f)
 			velocity = {};
 
-		//acceleration = {};
+		acceleration = {};
 	}
 
 	// Called at the end of the frame

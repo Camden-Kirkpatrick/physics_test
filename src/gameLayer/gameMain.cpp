@@ -19,10 +19,12 @@ struct GameData
 bool initGame()
 {
 	gameData.box.teleport({ 0, 0 });
+	gameData.box.teleport({ 0, 0 });
 	gameData.box.transform.w = 100.0f;
 	gameData.box.transform.h = 100.0f;
-	gameData.box.velocity = { 300.0f, 300.0f };
-	gameData.box.acceleration = { 100.0f, 100.0f };
+	gameData.box.drag = 0.01f;
+	//gameData.box.velocity = { 0.0f, 0.0f };
+	//gameData.box.acceleration = { 100.0f, 100.0f };
 
 	return true;
 }
@@ -32,29 +34,27 @@ bool updateGame()
 	float deltaTime = GetFrameTime();
 	if (deltaTime > 0.05f) deltaTime = 0.05f; // clamp to 20fps minimum
 
-	//gameData.box.applyGravity();
+	//gameData.box.acceleration.x += 5.0f;
+
+	float g = 20.0f;
+	gameData.box.applyGravity(g);
 
 	if (gameData.box.transform.pos.y >= win_height - gameData.box.transform.h)
 	{
 		gameData.box.velocity.y *= -1.0f;
-		gameData.box.acceleration.y *= -1.0f;
 	}
-	else if (gameData.box.transform.pos.y < 0)
+	if (gameData.box.transform.pos.y < 0)
 	{
 		gameData.box.velocity.y *= -1.0f;
-		gameData.box.acceleration.y *= -1.0f;
 	}
-	else if (gameData.box.transform.pos.x >= win_width - gameData.box.transform.w)
+	if (gameData.box.transform.pos.x >= win_width - gameData.box.transform.w)
 	{
 		gameData.box.velocity.x *= -1.0f;
-		gameData.box.acceleration.x *= -1.0f;
 	}
-	else if (gameData.box.transform.pos.x < 0)
+	if (gameData.box.transform.pos.x < 0)
 	{
 		gameData.box.velocity.x *= -1.0f;
-		gameData.box.acceleration.x *= -1.0f;
 	}
-
 
 	gameData.box.updateForces(deltaTime);
 	std::cout << gameData.box.velocity.x << ", " << gameData.box.velocity.y << std::endl;
