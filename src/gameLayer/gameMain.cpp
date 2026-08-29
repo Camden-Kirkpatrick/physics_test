@@ -18,13 +18,14 @@ struct GameData
 
 bool initGame()
 {
-	gameData.box.teleport({ 0, 0 });
-	gameData.box.teleport({ 0, 0 });
 	gameData.box.transform.w = 100.0f;
 	gameData.box.transform.h = 100.0f;
 	gameData.box.drag = 0.01f;
 	//gameData.box.velocity = { 0.0f, 0.0f };
 	//gameData.box.acceleration = { 100.0f, 100.0f };
+
+	// Center the box's horizontal position
+	gameData.box.teleport({ (win_width / 2) - (0.5f * gameData.box.transform.w), 0 });
 
 	return true;
 }
@@ -36,24 +37,31 @@ bool updateGame()
 
 	//gameData.box.acceleration.x += 5.0f;
 
-	float g = 20.0f;
+	float g = 5000.0f;
 	gameData.box.applyGravity(g);
 
-	if (gameData.box.transform.pos.y >= win_height - gameData.box.transform.h)
-	{
-		gameData.box.velocity.y *= -1.0f;
+	auto& box = gameData.box;
+	float right = win_width - box.transform.w;
+	float bottom = win_height - box.transform.h;
+
+	// Bounce off walls: only when past an edge AND moving into it (so we don't
+	// re-flip a box that's already leaving or resting). Clamp back to the edge
+	// so the box can't sit outside the bounds and re-trigger next frame.
+	if (box.transform.pos.y >= bottom && box.velocity.y > 0) {
+		box.transform.pos.y = bottom;
+		box.velocity.y *= -1.0f;
 	}
-	if (gameData.box.transform.pos.y < 0)
-	{
-		gameData.box.velocity.y *= -1.0f;
+	if (box.transform.pos.y <= 0 && box.velocity.y < 0) {
+		box.transform.pos.y = 0;
+		box.velocity.y *= -1.0f;
 	}
-	if (gameData.box.transform.pos.x >= win_width - gameData.box.transform.w)
-	{
-		gameData.box.velocity.x *= -1.0f;
+	if (box.transform.pos.x >= right && box.velocity.x > 0) {
+		box.transform.pos.x = right;
+		box.velocity.x *= -1.0f;
 	}
-	if (gameData.box.transform.pos.x < 0)
-	{
-		gameData.box.velocity.x *= -1.0f;
+	if (box.transform.pos.x <= 0 && box.velocity.x < 0) {
+		box.transform.pos.x = 0;
+		box.velocity.x *= -1.0f;
 	}
 
 	gameData.box.updateForces(deltaTime);
