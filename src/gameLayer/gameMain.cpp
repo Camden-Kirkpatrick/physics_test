@@ -37,7 +37,7 @@ bool updateGame()
 
 	//gameData.box.acceleration.x += 5.0f;
 
-	float g = 5000.0f;
+	float g = 200.0f;
 	gameData.box.applyGravity(g);
 
 	auto& box = gameData.box;
