@@ -4,6 +4,9 @@
 #include <iostream>
 #include "physics.hpp"
 #include <asserts.hpp>
+#include <random>
+
+#define NUM_BOXES 5
 
 struct GameData
 {
@@ -14,22 +17,36 @@ struct GameData
 	//Color c{255, 0, 200, 255};
 
 	PhysicalEntity box;
-	PhysicalEntity boxes[100];
+	PhysicalEntity boxes[NUM_BOXES];
 }gameData;
 
 bool initGame()
 {
-	gameData.box.transform.w = 100.0f;
-	gameData.box.transform.h = 100.0f;
-	gameData.box.drag = 0.0f;
-	gameData.box.velocity = { 100.0f, 0.0f };
-	gameData.box.acceleration = { 0.0f, 0.0f };
+	//gameData.box.transform.w = 100.0f;
+	//gameData.box.transform.h = 100.0f;
+	//gameData.box.drag = 0.0f;
+	//gameData.box.velocity = { 100.0f, 0.0f };
+	//gameData.box.acceleration = { 0.0f, 0.0f };
 
-	// Center the box's position
-	gameData.box.teleport({
-		(win_width / 2) - (0.5f * gameData.box.transform.w),
-		(win_height / 2) - (0.5f * gameData.box.transform.h)
-	});
+	//// Center the box's position
+	//gameData.box.teleport({
+	//	(win_width / 2) - (0.5f * gameData.box.transform.w),
+	//	(win_height / 2) - (0.5f * gameData.box.transform.h)
+	//});
+
+	for (int i = 0; i < NUM_BOXES; i++)
+	{
+		gameData.boxes[i].transform.w = 100.0f;
+		gameData.boxes[i].transform.h = 100.0f;
+		gameData.boxes[i].drag = 0.0f;
+		gameData.boxes[i].velocity = { 100.0f, 0.0f };
+		gameData.boxes[i].acceleration = { 0.0f, 0.0f };
+
+		gameData.boxes[i].teleport({
+			(win_width / 2) - (0.5f * gameData.boxes[i].transform.w),
+			(win_height / 2) - (0.5f * gameData.boxes[i].transform.h)
+		});
+	}
 
 	return true;
 }
@@ -39,45 +56,48 @@ bool updateGame()
 	float deltaTime = GetFrameTime();
 	if (deltaTime > 0.05f) deltaTime = 0.05f; // clamp to 20fps minimum
 
-	float g = 0.0f;
-	gameData.box.applyGravity(g);
+	for (int i = 0; i < NUM_BOXES; i++)
+	{
+		auto& box = gameData.boxes[i];
+		float right = win_width - box.transform.w;
+		float bottom = win_height - box.transform.h;
 
-	auto& box = gameData.box;
-	float right = win_width - box.transform.w;
-	float bottom = win_height - box.transform.h;
+		float g = 0.0f;
+		box.applyGravity(g);
 
-	// Bounce off walls: only when past an edge AND moving into it (so we don't
-	// re-flip a box that's already leaving or resting). Clamp back to the edge
-	// so the box can't sit outside the bounds and re-trigger next frame.
-	if (box.transform.pos.y >= bottom && box.velocity.y > 0) {
-		box.transform.pos.y = bottom;
-		box.velocity.y *= -1.0f;
+		// Bounce off walls: only when past an edge AND moving into it (so we don't
+		// re-flip a box that's already leaving or resting). Clamp back to the edge
+		// so the box can't sit outside the bounds and re-trigger next frame.
+		if (box.transform.pos.y >= bottom && box.velocity.y > 0) {
+			box.transform.pos.y = bottom;
+			box.velocity.y *= -1.0f;
+		}
+		if (box.transform.pos.y <= 0 && box.velocity.y < 0) {
+			box.transform.pos.y = 0;
+			box.velocity.y *= -1.0f;
+		}
+		if (box.transform.pos.x >= right && box.velocity.x > 0) {
+			box.transform.pos.x = right;
+			box.velocity.x *= -1.0f;
+		}
+		if (box.transform.pos.x <= 0 && box.velocity.x < 0) {
+			box.transform.pos.x = 0;
+			box.velocity.x *= -1.0f;
+		}
+
+		box.updateForces(deltaTime);
+		//std::cout << gameData.box.velocity.x << ", " << gameData.box.velocity.y << std::endl;
+
+		box.updateFinal();
+
+		DrawRectangle(
+			box.transform.pos.x,
+			box.transform.pos.y,
+			box.transform.w,
+			box.transform.h,
+			{ 255, 0, 0, 255 }
+		);
 	}
-	if (box.transform.pos.y <= 0 && box.velocity.y < 0) {
-		box.transform.pos.y = 0;
-		box.velocity.y *= -1.0f;
-	}
-	if (box.transform.pos.x >= right && box.velocity.x > 0) {
-		box.transform.pos.x = right;
-		box.velocity.x *= -1.0f;
-	}
-	if (box.transform.pos.x <= 0 && box.velocity.x < 0) {
-		box.transform.pos.x = 0;
-		box.velocity.x *= -1.0f;
-	}
-
-	gameData.box.updateForces(deltaTime);
-	std::cout << gameData.box.velocity.x << ", " << gameData.box.velocity.y << std::endl;
-
-	gameData.box.updateFinal();
-
-	DrawRectangle(
-		gameData.box.transform.pos.x,
-		gameData.box.transform.pos.y,
-		gameData.box.transform.w,
-		gameData.box.transform.h,
-		{255, 0, 0, 255}
-	);
 
 	//// Player movement
 	//if (IsKeyDown(KEY_A)) { gameData.posX -= 200 * deltaTime; }
