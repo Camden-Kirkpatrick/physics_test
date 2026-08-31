@@ -14,18 +14,22 @@ struct GameData
 	//Color c{255, 0, 200, 255};
 
 	PhysicalEntity box;
+	PhysicalEntity boxes[100];
 }gameData;
 
 bool initGame()
 {
 	gameData.box.transform.w = 100.0f;
 	gameData.box.transform.h = 100.0f;
-	gameData.box.drag = 0.01f;
-	//gameData.box.velocity = { 0.0f, 0.0f };
-	//gameData.box.acceleration = { 100.0f, 100.0f };
+	gameData.box.drag = 0.0f;
+	gameData.box.velocity = { 100.0f, 0.0f };
+	gameData.box.acceleration = { 0.0f, 0.0f };
 
-	// Center the box's horizontal position
-	gameData.box.teleport({ (win_width / 2) - (0.5f * gameData.box.transform.w), 0 });
+	// Center the box's position
+	gameData.box.teleport({
+		(win_width / 2) - (0.5f * gameData.box.transform.w),
+		(win_height / 2) - (0.5f * gameData.box.transform.h)
+	});
 
 	return true;
 }
@@ -35,9 +39,7 @@ bool updateGame()
 	float deltaTime = GetFrameTime();
 	if (deltaTime > 0.05f) deltaTime = 0.05f; // clamp to 20fps minimum
 
-	//gameData.box.acceleration.x += 5.0f;
-
-	float g = 200.0f;
+	float g = 0.0f;
 	gameData.box.applyGravity(g);
 
 	auto& box = gameData.box;

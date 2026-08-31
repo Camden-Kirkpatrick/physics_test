@@ -193,7 +193,7 @@ struct PhysicalEntity
 
 		// At very low speeds v^2 is tiny, so drag can never quite reach zero and
 		// the object drifts forever. Snap to rest once we're crawling slow enough.
-		if (Vector2Length(velocity) < 0.01f)
+		if (Vector2Length(velocity) < 0.025f)
 			velocity = {};
 
 		acceleration = {};
