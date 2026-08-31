@@ -3,10 +3,20 @@
 #include <fstream>
 #include <iostream>
 #include "physics.hpp"
+#include "randomStuff.hpp"
 #include <asserts.hpp>
-#include <random>
 
 #define NUM_BOXES 5
+
+const Color COLORS[7] = {
+	RED,
+	GREEN,
+	BLUE,
+	YELLOW,
+	ORANGE,
+	PINK,
+	PURPLE
+};
 
 struct GameData
 {
@@ -18,10 +28,15 @@ struct GameData
 
 	PhysicalEntity box;
 	PhysicalEntity boxes[NUM_BOXES];
+	Color boxColors[NUM_BOXES];
+	std::ranlux24_base rng;
 }gameData;
 
 bool initGame()
 {
+	std::random_device rd;
+	gameData.rng.seed(rd());
+
 	//gameData.box.transform.w = 100.0f;
 	//gameData.box.transform.h = 100.0f;
 	//gameData.box.drag = 0.0f;
@@ -36,11 +51,14 @@ bool initGame()
 
 	for (int i = 0; i < NUM_BOXES; i++)
 	{
-		gameData.boxes[i].transform.w = 100.0f;
-		gameData.boxes[i].transform.h = 100.0f;
+		int randomSize = 100 * getRandomInt(gameData.rng, 1, 5);
+		gameData.boxes[i].transform.w = randomSize;
+		gameData.boxes[i].transform.h = randomSize;
 		gameData.boxes[i].drag = 0.0f;
-		gameData.boxes[i].velocity = { 100.0f, 0.0f };
+		gameData.boxes[i].velocity = { getRandomFloat(gameData.rng, 0, 1000), getRandomFloat(gameData.rng, 1, 1000) };
 		gameData.boxes[i].acceleration = { 0.0f, 0.0f };
+
+		gameData.boxColors[i] = COLORS[getRandomInt(gameData.rng, 0, 6)];
 
 		gameData.boxes[i].teleport({
 			(win_width / 2) - (0.5f * gameData.boxes[i].transform.w),
@@ -95,7 +113,7 @@ bool updateGame()
 			box.transform.pos.y,
 			box.transform.w,
 			box.transform.h,
-			{ 255, 0, 0, 255 }
+			gameData.boxColors[i]
 		);
 	}
 
