@@ -6,7 +6,7 @@
 #include "randomStuff.hpp"
 #include <asserts.hpp>
 
-#define NUM_BOXES 5
+#define NUM_BOXES 500
 
 const Color COLORS[7] = {
 	RED,
@@ -26,32 +26,19 @@ struct GameData
 	//int playerHeight = 50;
 	//Color c{255, 0, 200, 255};
 
-	PhysicalEntity box;
 	PhysicalEntity boxes[NUM_BOXES];
 	Color boxColors[NUM_BOXES];
 	std::ranlux24_base rng;
-}gameData;
+} gameData;
 
 bool initGame()
 {
 	std::random_device rd;
 	gameData.rng.seed(rd());
 
-	//gameData.box.transform.w = 100.0f;
-	//gameData.box.transform.h = 100.0f;
-	//gameData.box.drag = 0.0f;
-	//gameData.box.velocity = { 100.0f, 0.0f };
-	//gameData.box.acceleration = { 0.0f, 0.0f };
-
-	//// Center the box's position
-	//gameData.box.teleport({
-	//	(win_width / 2) - (0.5f * gameData.box.transform.w),
-	//	(win_height / 2) - (0.5f * gameData.box.transform.h)
-	//});
-
 	for (int i = 0; i < NUM_BOXES; i++)
 	{
-		int randomSize = 100 * getRandomInt(gameData.rng, 1, 5);
+		int randomSize = getRandomInt(gameData.rng, 1, 50);
 		gameData.boxes[i].transform.w = randomSize;
 		gameData.boxes[i].transform.h = randomSize;
 		gameData.boxes[i].drag = 0.0f;
@@ -60,9 +47,14 @@ bool initGame()
 
 		gameData.boxColors[i] = COLORS[getRandomInt(gameData.rng, 0, 6)];
 
+		//gameData.boxes[i].teleport({
+		//	(win_width / 2) - (0.5f * gameData.boxes[i].transform.w),
+		//	(win_height / 2) - (0.5f * gameData.boxes[i].transform.h)
+		//});
+
 		gameData.boxes[i].teleport({
-			(win_width / 2) - (0.5f * gameData.boxes[i].transform.w),
-			(win_height / 2) - (0.5f * gameData.boxes[i].transform.h)
+			getRandomFloat(gameData.rng, 0, win_width - gameData.boxes[i].transform.w),
+			getRandomFloat(gameData.rng, 0, win_height - gameData.boxes[i].transform.h),
 		});
 	}
 
@@ -80,8 +72,8 @@ bool updateGame()
 		float right = win_width - box.transform.w;
 		float bottom = win_height - box.transform.h;
 
-		float g = 0.0f;
-		box.applyGravity(g);
+		//float g = 100.0f;
+		//box.applyGravity(g);
 
 		// Bounce off walls: only when past an edge AND moving into it (so we don't
 		// re-flip a box that's already leaving or resting). Clamp back to the edge

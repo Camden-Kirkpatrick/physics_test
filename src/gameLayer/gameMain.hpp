@@ -1,6 +1,6 @@
 #pragma once
-#define win_width 1920
-#define win_height 1080
+#define win_width 3840
+#define win_height 2160
 #define FPS 240
 
 bool initGame();
