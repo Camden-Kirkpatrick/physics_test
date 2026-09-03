@@ -6,7 +6,7 @@
 #include "randomStuff.hpp"
 #include <asserts.hpp>
 
-#define NUM_BOXES 5
+#define NUM_BOXES 10
 
 const Color COLORS[7] = {
 	RED,
@@ -38,7 +38,7 @@ bool initGame()
 
 	for (int i = 0; i < NUM_BOXES; i++)
 	{
-		int randomSize = getRandomInt(gameData.rng, 1, 50);
+		int randomSize = getRandomInt(gameData.rng, 50, 250);
 		gameData.boxes[i].transform.w = randomSize;
 		gameData.boxes[i].transform.h = randomSize;
 		gameData.boxes[i].drag = 0.0f;
@@ -56,13 +56,14 @@ bool initGame()
 		// Random spot in the window
 		gameData.boxes[i].teleport({
 			getRandomFloat(gameData.rng, 0, win_width - gameData.boxes[i].transform.w),
-			//getRandomFloat(gameData.rng, 0, win_height - gameData.boxes[i].transform.h),
-			500
+			getRandomFloat(gameData.rng, 0, win_height - gameData.boxes[i].transform.h),
 		});
 	}
 
 	return true;
 }
+
+int counter = 0;
 
 bool updateGame()
 {
@@ -75,7 +76,7 @@ bool updateGame()
 		float right = win_width - box.transform.w;
 		float bottom = win_height - box.transform.h;
 
-		float g = getRandomFloat(gameData.rng, 10000.0f, 10000.0f);
+		float g = 50000.0f;
 		box.applyGravity(g);
 
 		// Bounce off walls: only when past an edge AND moving into it (so we don't
@@ -99,7 +100,9 @@ bool updateGame()
 		}
 
 		box.updateForces(deltaTime);
-		//std::cout << gameData.box.velocity.x << ", " << gameData.box.velocity.y << std::endl;
+
+		if (counter % 240 == 0)
+			std::cout << gameData.boxes[0].velocity.y << std::endl;
 
 		box.updateFinal();
 
@@ -123,7 +126,7 @@ bool updateGame()
 	//if (gameData.posX < 0) gameData.posX = 0;
 	//if (gameData.posX + gameData.playerWidth > win_width)
 	//	gameData.posX = win_width - gameData.playerWidth;
-	// 
+	//
 	//if (gameData.posY < 0) gameData.posY = 0;
 	//if (gameData.posY + gameData.playerHeight > win_height)
 	//	gameData.posY = win_height - gameData.playerHeight;
@@ -131,6 +134,7 @@ bool updateGame()
 	//// Draw the player
 	//DrawRectangle(gameData.posX, gameData.posY, gameData.playerWidth, gameData.playerHeight, gameData.c);
 
+	counter++;
 	return true;
 }
 
