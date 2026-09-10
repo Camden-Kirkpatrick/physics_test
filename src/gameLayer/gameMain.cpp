@@ -306,6 +306,37 @@ const Color COLORS[7] = {
 	PURPLE
 };
 
+enum class BoxSizes
+{
+	MIN_SMALL_BOX = 5,
+	MAX_SMALL_BOX = 50,
+
+	MIN_MED_BOX = 50,
+	MAX_MED_BOX = 250,
+
+	MIN_LARGE_BOX = 100,
+	MAX_LARGE_BOX = 400
+};
+
+struct SizeRange
+{
+	int min;
+	int max;
+};
+
+constexpr SizeRange BOX_SIZE_RANGES[] = {
+	{5, 50},
+	{50, 250},
+	{100, 400}
+};
+
+enum class BoxSizeOptions
+{
+	SMALL = 0,
+	MED,
+	LARGE
+};
+
 struct GameData
 {
 	//PhysicalEntity boxes[NUM_BOXES];
@@ -331,23 +362,28 @@ bool initGame()
 		std::cout << "How many boxes do you want? ";
 		std::cin >> gameData.numBoxes;
 	}
-	//while (gameData.numBoxes < 1 || gameData.numBoxes > 100000)
-	//{
-	//	if (gameData.numBoxes < 1)
-	//		std::cerr << "The number of boxes must be at least one\n";
-	//	else 
-	//		std::cerr << "The number of boxes must be less than a hundred thousand\n";
-
-	//	std::cout << "How many boxes do you want? ";
-	//	std::cin >> gameData.numBoxes;
-	//}
 
 	gameData.boxes.resize(gameData.numBoxes);
 	gameData.boxColors.resize(gameData.numBoxes);
 
+	int boxSize = -1;
+	std::cout << "How big do you want the boxes to be? (0: SMALL, 1: MEDIUM, 2: LARGE) ";
+	std::cin >> boxSize;
+
+	while (!(std::cin) || (boxSize != (int)BoxSizeOptions::SMALL && boxSize != (int)BoxSizeOptions::MED && boxSize != (int)BoxSizeOptions::LARGE))
+	{
+		std::cin.clear();
+		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+		std::cerr << "Invalid box size entered\n";
+		std::cout << "Enter a corresponding number for the box size you want: (0: SMALL, 1: MEDIUM, 2: LARGE) ";
+		std::cin >> boxSize;
+	}
+
+	SizeRange range = BOX_SIZE_RANGES[boxSize];
+
 	for (int i = 0; i < gameData.numBoxes; i++)
 	{
-		int randomSize = getRandomInt(gameData.rng, 50, 250);
+		int randomSize = getRandomInt(gameData.rng, range.min, range.max);
 		gameData.boxes[i].transform.w = randomSize;
 		gameData.boxes[i].transform.h = randomSize;
 		gameData.boxes[i].drag = NO_AIR_RES;
