@@ -275,11 +275,21 @@
 #include <raylib.h>
 #include <fstream>
 #include <cmath>
+#include <vector>
+#include <iostream>
+#include <limits>
 #include "physics.hpp"
 #include "randomStuff.hpp"
 #include <asserts.hpp>
 
 #define NUM_BOXES 10
+#define MAX_NUM_BOXES 100'000
+#define MIN_NUM_BOXES 1
+
+#define NO_AIR_RES 0.0f
+#define LOW_AIR_RES 0.0001f
+#define MED_AIR_RES 0.001f
+#define HIGH_AIR_RES 0.01f
 
 const Color COLORS[7] = {
 	RED,
@@ -293,9 +303,12 @@ const Color COLORS[7] = {
 
 struct GameData
 {
-	PhysicalEntity boxes[NUM_BOXES];
-	Color boxColors[NUM_BOXES];
-	std::ranlux24_base rng;
+	//PhysicalEntity boxes[NUM_BOXES];
+
+	int numBoxes = 0;
+	std::vector<PhysicalEntity> boxes = {};
+	std::vector<Color> boxColors = {};
+	std::ranlux24_base rng = {};
 } gameData;
 
 bool initGame()
@@ -303,12 +316,36 @@ bool initGame()
 	std::random_device rd;
 	gameData.rng.seed(rd());
 
-	for (int i = 0; i < NUM_BOXES; i++)
+	std::cout << "How many boxes do you want? ";
+	std::cin >> gameData.numBoxes;
+	while (gameData.numBoxes > MAX_NUM_BOXES || gameData.numBoxes < MIN_NUM_BOXES)
+	{
+		std::cin.clear();
+		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+		std::cerr << "The number of boxes must be in the range [1, 100,000]\n";
+		std::cout << "How many boxes do you want? ";
+		std::cin >> gameData.numBoxes;
+	}
+	//while (gameData.numBoxes < 1 || gameData.numBoxes > 100000)
+	//{
+	//	if (gameData.numBoxes < 1)
+	//		std::cerr << "The number of boxes must be at least one\n";
+	//	else 
+	//		std::cerr << "The number of boxes must be less than a hundred thousand\n";
+
+	//	std::cout << "How many boxes do you want? ";
+	//	std::cin >> gameData.numBoxes;
+	//}
+
+	gameData.boxes.resize(gameData.numBoxes);
+	gameData.boxColors.resize(gameData.numBoxes);
+
+	for (int i = 0; i < gameData.numBoxes; i++)
 	{
 		int randomSize = getRandomInt(gameData.rng, 50, 250);
 		gameData.boxes[i].transform.w = randomSize;
 		gameData.boxes[i].transform.h = randomSize;
-		gameData.boxes[i].drag = 0.04f;
+		gameData.boxes[i].drag = NO_AIR_RES;
 		gameData.boxes[i].velocity = { getRandomFloat(gameData.rng, -1000, 1000), getRandomFloat(gameData.rng, -1000, 1000) };
 
 		gameData.boxColors[i] = COLORS[getRandomInt(gameData.rng, 0, 6)];
@@ -345,7 +382,7 @@ bool updateGame()
 	// lets a box (with drag > 0) actually come to a full stop -- it stands in for
 	// the missing normal force. With drag == 0 the bounces never get small enough
 	// to trip it, so it never fires.
-	for (int i = 0; i < NUM_BOXES; i++)
+	for (int i = 0; i < gameData.numBoxes; i++)
 	{
 		auto& box = gameData.boxes[i];
 		float right = win_width - box.transform.w;
