@@ -291,6 +291,11 @@
 #define MED_AIR_RES 0.001f
 #define HIGH_AIR_RES 0.01f
 
+#define NO_GRAV 0
+#define LOW_GRAV 1000
+#define MED_GRAV 5000
+#define HIGH_GRAV 10000
+
 const Color COLORS[7] = {
 	RED,
 	GREEN,
@@ -388,7 +393,7 @@ bool updateGame()
 		float right = win_width - box.transform.w;
 		float bottom = win_height - box.transform.h;
 
-		float g = 5000.0f;
+		float g = MED_GRAV;
 		box.applyGravity(g);
 
 		// Integrate first, resolve collisions after, so the rest-pin is the last
