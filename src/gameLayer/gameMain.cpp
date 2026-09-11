@@ -306,18 +306,6 @@ const Color COLORS[7] = {
 	PURPLE
 };
 
-enum class BoxSizes
-{
-	MIN_SMALL_BOX = 5,
-	MAX_SMALL_BOX = 50,
-
-	MIN_MED_BOX = 50,
-	MAX_MED_BOX = 250,
-
-	MIN_LARGE_BOX = 100,
-	MAX_LARGE_BOX = 400
-};
-
 struct SizeRange
 {
 	int min;
@@ -381,13 +369,27 @@ bool initGame()
 
 	SizeRange range = BOX_SIZE_RANGES[boxSize];
 
+	int boxMovement = -1;
+	std::cout << "Do you want the boxes to have their own speed? (0: NO, 1: YES) ";
+	std::cin >> boxMovement;
+
+	while (!(std::cin) || (boxMovement != 0 && boxMovement != 1))
+	{
+		std::cin.clear();
+		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+		std::cerr << "You must enter either 0 or 1\n";
+		std::cout << "Do you want the boxes to have their own speed? (0: NO, 1: YES) ";
+		std::cin >> boxMovement;
+	}
+
 	for (int i = 0; i < gameData.numBoxes; i++)
 	{
 		int randomSize = getRandomInt(gameData.rng, range.min, range.max);
 		gameData.boxes[i].transform.w = randomSize;
 		gameData.boxes[i].transform.h = randomSize;
 		gameData.boxes[i].drag = NO_AIR_RES;
-		gameData.boxes[i].velocity = { getRandomFloat(gameData.rng, -1000, 1000), getRandomFloat(gameData.rng, -1000, 1000) };
+		if (boxMovement)
+			gameData.boxes[i].velocity = { getRandomFloat(gameData.rng, -1000, 1000), getRandomFloat(gameData.rng, -1000, 1000) };
 
 		gameData.boxColors[i] = COLORS[getRandomInt(gameData.rng, 0, 6)];
 
@@ -429,7 +431,7 @@ bool updateGame()
 		float right = win_width - box.transform.w;
 		float bottom = win_height - box.transform.h;
 
-		float g = MED_GRAV;
+		float g = NO_GRAV;
 		box.applyGravity(g);
 
 		// Integrate first, resolve collisions after, so the rest-pin is the last
