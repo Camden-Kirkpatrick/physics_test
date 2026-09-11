@@ -346,6 +346,7 @@ struct GameData
 	//PhysicalEntity boxes[NUM_BOXES];
 
 	int numBoxes = 0;
+	int gameMode = 0;
 	std::vector<PhysicalEntity> boxes = {};
 	std::vector<Color> boxColors = {};
 	std::ranlux24_base rng = {};
@@ -356,89 +357,124 @@ bool initGame()
 	std::random_device rd;
 	gameData.rng.seed(rd());
 
-	std::cout << "How many boxes do you want? ";
-	std::cin >> gameData.numBoxes;
-	while (gameData.numBoxes > MAX_NUM_BOXES || gameData.numBoxes < MIN_NUM_BOXES)
+
+	std::cout << "Enter 0 for an immediate demo, or 1 for a custom experience: ";
+	std::cin >> gameData.gameMode;
+	while (!(std::cin) || (gameData.gameMode != 0 && gameData.gameMode != 1))
 	{
 		std::cin.clear();
 		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-		std::cerr << "The number of boxes must be in the range [1, 100,000]\n";
+		std::cerr << "Invalid option selected\n";
+		std::cout << "Enter 0 for an immediate demo, or 1 for a custom experience: ";
+		std::cin >> gameData.gameMode;
+	}
+
+	// Interactive demo
+	if (gameData.gameMode == 1)
+	{
 		std::cout << "How many boxes do you want? ";
 		std::cin >> gameData.numBoxes;
-	}
-
-	gameData.boxes.resize(gameData.numBoxes);
-	gameData.boxColors.resize(gameData.numBoxes);
-
-	int boxSize = -1;
-	std::cout << "How big do you want the boxes to be? (0: SMALL, 1: MEDIUM, 2: LARGE) ";
-	std::cin >> boxSize;
-
-	while (!(std::cin) || (boxSize != (int)BoxSizeOptions::SMALL && boxSize != (int)BoxSizeOptions::MED && boxSize != (int)BoxSizeOptions::LARGE))
-	{
-		std::cin.clear();
-		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-		std::cerr << "Invalid box size entered\n";
-		std::cout << "Enter a corresponding number for the box size you want: (0: SMALL, 1: MEDIUM, 2: LARGE) ";
-		std::cin >> boxSize;
-	}
-
-	Range range = BOX_SIZE_RANGES[boxSize];
-
-	int boxMovement = -1;
-	std::cout << "Do you want the boxes to have their own speed? (0: NO, 1: YES) ";
-	std::cin >> boxMovement;
-
-	while (!(std::cin) || (boxMovement != STATIC && boxMovement != MOVING))
-	{
-		std::cin.clear();
-		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-		std::cerr << "You must enter either 0 or 1\n";
-		std::cout << "Do you want the boxes to have their own speed? (0: NO, 1: YES) ";
-		std::cin >> boxMovement;
-	}
-
-	int boxSpeed = -1;
-	Range r = { 0, 0 };
-	if (boxMovement == 1)
-	{
-		std::cout << "Choose a speed for the boxes' movement: (0: SLOW, 1: MEDIUM, 2: FAST) ";
-		std::cin >> boxSpeed;
-
-		while (!(std::cin) || (boxSpeed != (int)BoxSpeedOptions::SLOW && boxSpeed != (int)BoxSpeedOptions::MEDIUM && boxSpeed != (int)BoxSpeedOptions::FAST))
+		while (gameData.numBoxes > MAX_NUM_BOXES || gameData.numBoxes < MIN_NUM_BOXES)
 		{
 			std::cin.clear();
 			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-			std::cerr << "Incorrect speed entered\n";
+			std::cerr << "The number of boxes must be in the range [1, 100,000]\n";
+			std::cout << "How many boxes do you want? ";
+			std::cin >> gameData.numBoxes;
+		}
+
+		gameData.boxes.resize(gameData.numBoxes);
+		gameData.boxColors.resize(gameData.numBoxes);
+
+		int boxSize = -1;
+		std::cout << "How big do you want the boxes to be? (0: SMALL, 1: MEDIUM, 2: LARGE) ";
+		std::cin >> boxSize;
+
+		while (!(std::cin) || (boxSize != (int)BoxSizeOptions::SMALL && boxSize != (int)BoxSizeOptions::MED && boxSize != (int)BoxSizeOptions::LARGE))
+		{
+			std::cin.clear();
+			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			std::cerr << "Invalid box size entered\n";
+			std::cout << "Enter a corresponding number for the box size you want: (0: SMALL, 1: MEDIUM, 2: LARGE) ";
+			std::cin >> boxSize;
+		}
+
+		Range range = BOX_SIZE_RANGES[boxSize];
+
+		int boxMovement = -1;
+		std::cout << "Do you want the boxes to have their own speed? (0: NO, 1: YES) ";
+		std::cin >> boxMovement;
+
+		while (!(std::cin) || (boxMovement != STATIC && boxMovement != MOVING))
+		{
+			std::cin.clear();
+			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			std::cerr << "You must enter either 0 or 1\n";
+			std::cout << "Do you want the boxes to have their own speed? (0: NO, 1: YES) ";
+			std::cin >> boxMovement;
+		}
+
+		int boxSpeed = -1;
+		Range r = { 0, 0 };
+		if (boxMovement == 1)
+		{
 			std::cout << "Choose a speed for the boxes' movement: (0: SLOW, 1: MEDIUM, 2: FAST) ";
 			std::cin >> boxSpeed;
+
+			while (!(std::cin) || (boxSpeed != (int)BoxSpeedOptions::SLOW && boxSpeed != (int)BoxSpeedOptions::MEDIUM && boxSpeed != (int)BoxSpeedOptions::FAST))
+			{
+				std::cin.clear();
+				std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+				std::cerr << "Incorrect speed entered\n";
+				std::cout << "Choose a speed for the boxes' movement: (0: SLOW, 1: MEDIUM, 2: FAST) ";
+				std::cin >> boxSpeed;
+			}
+			r = BOX_SPEED_RANGES[boxSpeed];
 		}
-		r = BOX_SPEED_RANGES[boxSpeed];
+
+
+		for (int i = 0; i < gameData.numBoxes; i++)
+		{
+			int randomSize = getRandomInt(gameData.rng, range.min, range.max);
+			gameData.boxes[i].transform.w = randomSize;
+			gameData.boxes[i].transform.h = randomSize;
+			gameData.boxes[i].drag = NO_AIR_RES;
+			if (boxMovement)
+				gameData.boxes[i].velocity = { getRandomFloat(gameData.rng, r.min, r.max), getRandomFloat(gameData.rng, r.min, r.max) };
+
+			gameData.boxColors[i] = COLORS[getRandomInt(gameData.rng, 0, 6)];
+
+			// Random spot in the window
+			gameData.boxes[i].teleport({
+				getRandomFloat(gameData.rng, 0, win_width - gameData.boxes[i].transform.w),
+				getRandomFloat(gameData.rng, 0, win_height - gameData.boxes[i].transform.h),
+				});
+		}
 	}
-	
 
-	for (int i = 0; i < gameData.numBoxes; i++)
+	// Hardcoded demo
+	else
 	{
-		int randomSize = getRandomInt(gameData.rng, range.min, range.max);
-		gameData.boxes[i].transform.w = randomSize;
-		gameData.boxes[i].transform.h = randomSize;
-		gameData.boxes[i].drag = NO_AIR_RES;
-		if (boxMovement)
-			gameData.boxes[i].velocity = { getRandomFloat(gameData.rng, r.min, r.max), getRandomFloat(gameData.rng, r.min, r.max) };
+		gameData.numBoxes = 25;
+		gameData.boxes.resize(gameData.numBoxes);
+		gameData.boxColors.resize(gameData.numBoxes);
 
-		gameData.boxColors[i] = COLORS[getRandomInt(gameData.rng, 0, 6)];
+		for (int i = 0; i < gameData.numBoxes; i++)
+		{
+			int randomSize = getRandomInt(gameData.rng, 50, 250);
+			gameData.boxes[i].transform.w = randomSize;
+			gameData.boxes[i].transform.h = randomSize;
+			gameData.boxes[i].drag = NO_AIR_RES;
+			gameData.boxes[i].velocity = { getRandomFloat(gameData.rng, -1000, 1000), getRandomFloat(gameData.rng, -1000, 1000) };
 
-		// Middle of the window
-		//gameData.boxes[i].teleport({
-		//	(win_width / 2) - (0.5f * gameData.boxes[i].transform.w),
-		//	(win_height / 2) - (0.5f * gameData.boxes[i].transform.h)
-		//});
+			gameData.boxColors[i] = COLORS[getRandomInt(gameData.rng, 0, 6)];
 
-		// Random spot in the window
-		gameData.boxes[i].teleport({
-			getRandomFloat(gameData.rng, 0, win_width - gameData.boxes[i].transform.w),
-			getRandomFloat(gameData.rng, 0, win_height - gameData.boxes[i].transform.h),
-		});
+			// Random spot in the window
+			gameData.boxes[i].teleport({
+				getRandomFloat(gameData.rng, 0, win_width - gameData.boxes[i].transform.w),
+				getRandomFloat(gameData.rng, 0, win_height - gameData.boxes[i].transform.h),
+			});
+		}
 	}
 
 	return true;
