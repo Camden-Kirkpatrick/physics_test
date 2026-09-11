@@ -296,8 +296,14 @@
 #define MED_GRAV 5000
 #define HIGH_GRAV 10000
 
+#define DEMO 0
+#define CUSTOM 1
+
 #define STATIC 0
 #define MOVING 1
+
+#define DAMPED_MOTION 0
+#define PERPETUAL_MOTION 1
 
 const Color COLORS[7] = {
 	RED,
@@ -346,7 +352,9 @@ struct GameData
 	//PhysicalEntity boxes[NUM_BOXES];
 
 	int numBoxes = 0;
-	int gameMode = 0;
+	int gameMode = DEMO;
+	float airRes = NO_AIR_RES;
+	float grav = NO_GRAV;
 	std::vector<PhysicalEntity> boxes = {};
 	std::vector<Color> boxColors = {};
 	std::ranlux24_base rng = {};
@@ -356,7 +364,6 @@ bool initGame()
 {
 	std::random_device rd;
 	gameData.rng.seed(rd());
-
 
 	std::cout << "Enter 0 for an immediate demo, or 1 for a custom experience: ";
 	std::cin >> gameData.gameMode;
@@ -370,7 +377,7 @@ bool initGame()
 	}
 
 	// Interactive demo
-	if (gameData.gameMode == 1)
+	if (gameData.gameMode == CUSTOM)
 	{
 		std::cout << "How many boxes do you want? ";
 		std::cin >> gameData.numBoxes;
@@ -432,13 +439,31 @@ bool initGame()
 			r = BOX_SPEED_RANGES[boxSpeed];
 		}
 
+		int motion = -1;
+		std::cout << "Do you want the boxes to move forever? (0: NO, 1: YES) ";
+		std::cin >> motion;
+		while (!(std::cin) || (motion != DAMPED_MOTION && motion != PERPETUAL_MOTION))
+		{
+			std::cin.clear();
+			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			std::cerr << "Incorrect option selected\n";
+			std::cout << "Do you want the boxes to move forever? (0: NO, 1: YES) ";
+			std::cin >> motion;
+		}
+
+		if (motion == DAMPED_MOTION)
+		{
+			gameData.airRes = MED_AIR_RES;
+			gameData.grav = MED_GRAV;
+		}
+
 
 		for (int i = 0; i < gameData.numBoxes; i++)
 		{
 			int randomSize = getRandomInt(gameData.rng, range.min, range.max);
 			gameData.boxes[i].transform.w = randomSize;
 			gameData.boxes[i].transform.h = randomSize;
-			gameData.boxes[i].drag = NO_AIR_RES;
+			gameData.boxes[i].drag = gameData.airRes;
 			if (boxMovement)
 				gameData.boxes[i].velocity = { getRandomFloat(gameData.rng, r.min, r.max), getRandomFloat(gameData.rng, r.min, r.max) };
 
@@ -448,7 +473,7 @@ bool initGame()
 			gameData.boxes[i].teleport({
 				getRandomFloat(gameData.rng, 0, win_width - gameData.boxes[i].transform.w),
 				getRandomFloat(gameData.rng, 0, win_height - gameData.boxes[i].transform.h),
-				});
+			});
 		}
 	}
 
@@ -464,7 +489,7 @@ bool initGame()
 			int randomSize = getRandomInt(gameData.rng, 50, 250);
 			gameData.boxes[i].transform.w = randomSize;
 			gameData.boxes[i].transform.h = randomSize;
-			gameData.boxes[i].drag = NO_AIR_RES;
+			gameData.boxes[i].drag = LOW_AIR_RES;
 			gameData.boxes[i].velocity = { getRandomFloat(gameData.rng, -1000, 1000), getRandomFloat(gameData.rng, -1000, 1000) };
 
 			gameData.boxColors[i] = COLORS[getRandomInt(gameData.rng, 0, 6)];
@@ -502,8 +527,7 @@ bool updateGame()
 		float right = win_width - box.transform.w;
 		float bottom = win_height - box.transform.h;
 
-		float g = NO_GRAV;
-		box.applyGravity(g);
+		box.applyGravity(gameData.grav);
 
 		// Integrate first, resolve collisions after, so the rest-pin is the last
 		// thing to touch the box before it's drawn (not undone by integration).
@@ -520,7 +544,7 @@ bool updateGame()
 		// Flooring the threshold at 2*g*deltaTime makes it scale with the nudge, so
 		// the residual is always caught no matter how slow the frame runs.
 		float restRise = 1.0f; // px
-		float restThreshold = fmaxf(sqrtf(2.0f * g * restRise), 2.0f * g * deltaTime);
+		float restThreshold = fmaxf(sqrtf(2.0f * gameData.grav * restRise), 2.0f * gameData.grav * deltaTime);
 
 		// Bounce off the walls: reflect across the edge (pos = 2*edge - pos) and
 		// flip velocity; edge 0 makes 2*edge - pos == -pos. Clamping to the edge
