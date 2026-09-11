@@ -296,6 +296,9 @@
 #define MED_GRAV 5000
 #define HIGH_GRAV 10000
 
+#define STATIC 0
+#define MOVING 1
+
 const Color COLORS[7] = {
 	RED,
 	GREEN,
@@ -306,13 +309,13 @@ const Color COLORS[7] = {
 	PURPLE
 };
 
-struct SizeRange
+struct Range
 {
 	int min;
 	int max;
 };
 
-constexpr SizeRange BOX_SIZE_RANGES[] = {
+constexpr Range BOX_SIZE_RANGES[] = {
 	{5, 50},
 	{50, 250},
 	{100, 400}
@@ -323,6 +326,19 @@ enum class BoxSizeOptions
 	SMALL = 0,
 	MED,
 	LARGE
+};
+
+constexpr Range BOX_SPEED_RANGES[] = {
+	{-100, 100},
+	{-1000, 1000},
+	{-5000, 5000}
+};
+
+enum class BoxSpeedOptions
+{
+	SLOW = 0,
+	MEDIUM,
+	FAST
 };
 
 struct GameData
@@ -367,13 +383,13 @@ bool initGame()
 		std::cin >> boxSize;
 	}
 
-	SizeRange range = BOX_SIZE_RANGES[boxSize];
+	Range range = BOX_SIZE_RANGES[boxSize];
 
 	int boxMovement = -1;
 	std::cout << "Do you want the boxes to have their own speed? (0: NO, 1: YES) ";
 	std::cin >> boxMovement;
 
-	while (!(std::cin) || (boxMovement != 0 && boxMovement != 1))
+	while (!(std::cin) || (boxMovement != STATIC && boxMovement != MOVING))
 	{
 		std::cin.clear();
 		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -382,6 +398,25 @@ bool initGame()
 		std::cin >> boxMovement;
 	}
 
+	int boxSpeed = -1;
+	Range r = { 0, 0 };
+	if (boxMovement == 1)
+	{
+		std::cout << "Choose a speed for the boxes' movement: (0: SLOW, 1: MEDIUM, 2: FAST) ";
+		std::cin >> boxSpeed;
+
+		while (!(std::cin) || (boxSpeed != (int)BoxSpeedOptions::SLOW && boxSpeed != (int)BoxSpeedOptions::MEDIUM && boxSpeed != (int)BoxSpeedOptions::FAST))
+		{
+			std::cin.clear();
+			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			std::cerr << "Incorrect speed entered\n";
+			std::cout << "Choose a speed for the boxes' movement: (0: SLOW, 1: MEDIUM, 2: FAST) ";
+			std::cin >> boxSpeed;
+		}
+		r = BOX_SPEED_RANGES[boxSpeed];
+	}
+	
+
 	for (int i = 0; i < gameData.numBoxes; i++)
 	{
 		int randomSize = getRandomInt(gameData.rng, range.min, range.max);
@@ -389,7 +424,7 @@ bool initGame()
 		gameData.boxes[i].transform.h = randomSize;
 		gameData.boxes[i].drag = NO_AIR_RES;
 		if (boxMovement)
-			gameData.boxes[i].velocity = { getRandomFloat(gameData.rng, -1000, 1000), getRandomFloat(gameData.rng, -1000, 1000) };
+			gameData.boxes[i].velocity = { getRandomFloat(gameData.rng, r.min, r.max), getRandomFloat(gameData.rng, r.min, r.max) };
 
 		gameData.boxColors[i] = COLORS[getRandomInt(gameData.rng, 0, 6)];
 
