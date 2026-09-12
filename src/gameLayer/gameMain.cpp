@@ -286,16 +286,6 @@
 #define MAX_NUM_BOXES 100'000
 #define MIN_NUM_BOXES 1
 
-#define NO_AIR_RES 0.0f
-#define LOW_AIR_RES 0.0001f
-#define MED_AIR_RES 0.001f
-#define HIGH_AIR_RES 0.01f
-
-#define NO_GRAV 0
-#define LOW_GRAV 1000
-#define MED_GRAV 5000
-#define HIGH_GRAV 10000
-
 #define DEMO 0
 #define CUSTOM 1
 
@@ -335,6 +325,7 @@ enum class BoxSizeOptions
 };
 
 constexpr Range BOX_SPEED_RANGES[] = {
+	{0, 0},
 	{-100, 100},
 	{-1000, 1000},
 	{-5000, 5000}
@@ -342,9 +333,40 @@ constexpr Range BOX_SPEED_RANGES[] = {
 
 enum class BoxSpeedOptions
 {
-	SLOW = 0,
+	STATIONARY = 0,
+	SLOW,
 	MEDIUM,
 	FAST
+};
+
+constexpr float GRAVITY[] = {
+	0.0f,
+	1000.0f,
+	5000.0f,
+	10000.0f
+};
+
+enum class BoxGravOptions
+{
+	NONE = 0,
+	LOW,
+	MEDIUM,
+	HIGH
+};
+
+constexpr float AIR_RES[] = {
+	0.0f,
+	0.0001f,
+	0.001f,
+	0.01f
+};
+
+enum class BoxAirResOptions
+{
+	NONE = 0,
+	LOW,
+	MEDIUM,
+	HIGH
 };
 
 struct GameData
@@ -353,8 +375,8 @@ struct GameData
 
 	int numBoxes = 0;
 	int gameMode = DEMO;
-	float airRes = NO_AIR_RES;
-	float grav = NO_GRAV;
+	float grav = GRAVITY[0];
+	float airRes = AIR_RES[0];
 	std::vector<PhysicalEntity> boxes = {};
 	std::vector<Color> boxColors = {};
 	std::ranlux24_base rng = {};
@@ -408,55 +430,47 @@ bool initGame()
 
 		Range range = BOX_SIZE_RANGES[boxSize];
 
-		int boxMovement = -1;
-		std::cout << "Do you want the boxes to have their own speed? (0: NO, 1: YES) ";
-		std::cin >> boxMovement;
-
-		while (!(std::cin) || (boxMovement != STATIC && boxMovement != MOVING))
-		{
-			std::cin.clear();
-			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-			std::cerr << "You must enter either 0 or 1\n";
-			std::cout << "Do you want the boxes to have their own speed? (0: NO, 1: YES) ";
-			std::cin >> boxMovement;
-		}
 
 		int boxSpeed = -1;
 		Range r = { 0, 0 };
-		if (boxMovement == 1)
-		{
-			std::cout << "Choose a speed for the boxes' movement: (0: SLOW, 1: MEDIUM, 2: FAST) ";
-			std::cin >> boxSpeed;
+		std::cout << "Choose a speed for the boxes' movement: (0: STATIONARY, 1: SLOW, 2: MEDIUM, 3: FAST) ";
+		std::cin >> boxSpeed;
 
-			while (!(std::cin) || (boxSpeed != (int)BoxSpeedOptions::SLOW && boxSpeed != (int)BoxSpeedOptions::MEDIUM && boxSpeed != (int)BoxSpeedOptions::FAST))
-			{
-				std::cin.clear();
-				std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-				std::cerr << "Incorrect speed entered\n";
-				std::cout << "Choose a speed for the boxes' movement: (0: SLOW, 1: MEDIUM, 2: FAST) ";
-				std::cin >> boxSpeed;
-			}
-			r = BOX_SPEED_RANGES[boxSpeed];
-		}
-
-		int motion = -1;
-		std::cout << "Do you want the boxes to move forever? (0: NO, 1: YES) ";
-		std::cin >> motion;
-		while (!(std::cin) || (motion != DAMPED_MOTION && motion != PERPETUAL_MOTION))
+		while (!(std::cin) || (boxSpeed != (int)BoxSpeedOptions::STATIONARY && boxSpeed != (int)BoxSpeedOptions::SLOW && boxSpeed != (int)BoxSpeedOptions::MEDIUM && boxSpeed != (int)BoxSpeedOptions::FAST))
 		{
 			std::cin.clear();
 			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-			std::cerr << "Incorrect option selected\n";
-			std::cout << "Do you want the boxes to move forever? (0: NO, 1: YES) ";
-			std::cin >> motion;
+			std::cerr << "Incorrect speed entered\n";
+			std::cout << "Choose a speed for the boxes' movement: (0: STATIONARY, 1: SLOW, 2: MEDIUM, 3: FAST) ";
+			std::cin >> boxSpeed;
 		}
+		r = BOX_SPEED_RANGES[boxSpeed];
 
-		if (motion == DAMPED_MOTION)
+		int gravSelection = -1;
+		std::cout << "Choose a setting for the boxes' gravity (0: NONE, 1: LOW, 2: MED, 3: HIGH) ";
+		std::cin >> gravSelection;
+		while (!(std::cin) || (gravSelection != (int)BoxGravOptions::NONE && gravSelection != (int)BoxGravOptions::LOW && gravSelection != (int)BoxGravOptions::MEDIUM && gravSelection != (int)BoxGravOptions::HIGH))
 		{
-			gameData.airRes = MED_AIR_RES;
-			gameData.grav = MED_GRAV;
+			std::cin.clear();
+			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			std::cerr << "Incorrect gravity selected\n";
+			std::cout << "Choose a setting for the boxes' gravity (0: NONE, 1: LOW, 2: MED, 3: HIGH) ";
+			std::cin >> gravSelection;
 		}
+		gameData.grav = GRAVITY[gravSelection];
 
+		int airResSelection = -1;
+		std::cout << "Choose a setting for the boxes' air resistance (0: NONE, 1: LOW, 2: MED, 3: HIGH) ";
+		std::cin >> airResSelection;
+		while (!(std::cin) || (airResSelection != (int)BoxAirResOptions::NONE && airResSelection != (int)BoxAirResOptions::LOW && airResSelection != (int)BoxAirResOptions::MEDIUM && airResSelection != (int)BoxAirResOptions::HIGH))
+		{
+			std::cin.clear();
+			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			std::cerr << "Incorrect air resistance selected\n";
+			std::cout << "Choose a setting for the boxes' air resistance (0: NONE, 1: LOW, 2: MED, 3: HIGH) ";
+			std::cin >> airResSelection;
+		}
+		gameData.airRes = AIR_RES[airResSelection];
 
 		for (int i = 0; i < gameData.numBoxes; i++)
 		{
@@ -464,8 +478,7 @@ bool initGame()
 			gameData.boxes[i].transform.w = randomSize;
 			gameData.boxes[i].transform.h = randomSize;
 			gameData.boxes[i].drag = gameData.airRes;
-			if (boxMovement)
-				gameData.boxes[i].velocity = { getRandomFloat(gameData.rng, r.min, r.max), getRandomFloat(gameData.rng, r.min, r.max) };
+			gameData.boxes[i].velocity = { getRandomFloat(gameData.rng, r.min, r.max), getRandomFloat(gameData.rng, r.min, r.max) };
 
 			gameData.boxColors[i] = COLORS[getRandomInt(gameData.rng, 0, 6)];
 
@@ -489,7 +502,7 @@ bool initGame()
 			int randomSize = getRandomInt(gameData.rng, 50, 250);
 			gameData.boxes[i].transform.w = randomSize;
 			gameData.boxes[i].transform.h = randomSize;
-			gameData.boxes[i].drag = LOW_AIR_RES;
+			gameData.boxes[i].drag = AIR_RES[1];
 			gameData.boxes[i].velocity = { getRandomFloat(gameData.rng, -1000, 1000), getRandomFloat(gameData.rng, -1000, 1000) };
 
 			gameData.boxColors[i] = COLORS[getRandomInt(gameData.rng, 0, 6)];
