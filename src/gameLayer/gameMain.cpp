@@ -369,6 +369,12 @@ enum class BoxAirResOptions
 	HIGH
 };
 
+enum class Shape
+{
+	SQUARE = 0,
+	CIRCLE
+};
+
 struct GameData
 {
 	//PhysicalEntity boxes[NUM_BOXES];
@@ -377,6 +383,7 @@ struct GameData
 	int gameMode = DEMO;
 	float grav = GRAVITY[0];
 	float airRes = AIR_RES[0];
+	Shape shape = Shape::SQUARE;
 	std::vector<PhysicalEntity> boxes = {};
 	std::vector<Color> boxColors = {};
 	std::ranlux24_base rng = {};
@@ -471,6 +478,19 @@ bool initGame()
 			std::cin >> airResSelection;
 		}
 		gameData.airRes = AIR_RES[airResSelection];
+
+		int shapeSelection = -1;
+		std::cout << "Choose a setting for the objects shape (0: SQUARE, 1: CIRCLE) ";
+		std::cin >> shapeSelection;
+		while (!(std::cin) || (shapeSelection != (int)Shape::SQUARE && shapeSelection != (int)Shape::CIRCLE))
+		{
+			std::cin.clear();
+			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			std::cerr << "Incorrect shape selected\n";
+			std::cout << "Choose a setting for the objects shape (0: SQUARE, 1: CIRCLE) ";
+			std::cin >> shapeSelection;
+		}
+		gameData.shape = (Shape)shapeSelection;
 
 		for (int i = 0; i < gameData.numBoxes; i++)
 		{
@@ -587,13 +607,22 @@ bool updateGame()
 
 		box.updateFinal();
 
-		DrawRectangle(
-			box.transform.pos.x,
-			box.transform.pos.y,
-			box.transform.w,
-			box.transform.h,
-			gameData.boxColors[i]
-		);
+		if (gameData.shape == Shape::SQUARE)
+		{ 
+			DrawRectangle(
+				box.transform.pos.x,
+				box.transform.pos.y,
+				box.transform.w,
+				box.transform.h,
+				gameData.boxColors[i]
+			);
+		}
+
+		else if (gameData.shape == Shape::CIRCLE)
+		{
+			float radius = box.transform.w * 0.5f;
+			DrawCircle(box.transform.pos.x + radius, box.transform.pos.y + radius, radius, gameData.boxColors[i]);
+		}
 	}
 
 	return true;
